@@ -1,6 +1,4 @@
-# DevOps Homework
-
-## lesson-3
+# DevOps Homework 3
 
 Містить Bash-скрипт **install_dev_tools.sh**, який автоматично встановлює:
 
