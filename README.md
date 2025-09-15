@@ -7,9 +7,9 @@
 
 Структура:
 
-- s3-backend створює S3-бакет для зберігання стейтів Terraform і DynamoDB-таблицю для блокування.
-- vpc створює VPC з публічними та приватними підмережами, Internet Gateway, NAT Gateway і таблицями маршрутів.
-- ecr створює репозиторій Elastic Container Registry (ECR) для зберігання Docker-образів.
+- **s3-backend** створює S3-бакет для зберігання стейтів Terraform і DynamoDB-таблицю для блокування.
+- **vpc** створює VPC з публічними та приватними підмережами, Internet Gateway, NAT Gateway і таблицями маршрутів.
+- **ecr** створює репозиторій Elastic Container Registry (ECR) для зберігання Docker-образів.
 
 Ініціалізація проєкту:
 
