@@ -10,3 +10,26 @@ venv/
 .idea/
 .vscode/
 .DS_Store
+*.code-workspace
+
+# Backup files
+*.bak
+*.swp
+*~
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+*.plan
+
+# Local environment / CLI configs
+.terraformrc
+terraform.rc
