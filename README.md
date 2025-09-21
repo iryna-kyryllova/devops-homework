@@ -1,53 +1,177 @@
-# DevOps Homework 10 (db-module)
+# DevOps Final Project
 
-### Розгортання інфраструктури
+Проєкт реалізує **production-ready DevOps інфраструктуру** з повним CI/CD pipeline'ом.
 
-У корені проєкту виконуємо команди Terraform для створення всіх необхідних сервісів:
+### Архітектура
+
+- Terraform (Infrastructure)
+- AWS (VPC, EKS, RDS, ECR)
+- Jenkins (CI)
+- Argo CD (CD)
+- Prometheus
+- Grafana (Monitoring)
+
+### Структура проєкту
+
+```
+Project/
+│
+├── main.tf                      # Головний файл для підключення модулів
+├── backend.tf                   # Налаштування бекенду для стейтів (S3 + DynamoDB)
+├── outputs.tf                   # Загальні виводи ресурсів
+│
+├── modules/                     # Каталог з усіма модулями
+│  ├── s3-backend/               # Модуль для S3 та DynamoDB
+│  │  ├── s3.tf                  # Створення S3-бакета
+│  │  ├── dynamodb.tf            # Створення DynamoDB
+│  │  ├── variables.tf           # Змінні для S3
+│  │  └── outputs.tf             # Виведення інформації про S3 та DynamoDB
+│  │
+│  ├── vpc/                      # Модуль для VPC
+│  │  ├── vpc.tf                 # Створення VPC, підмереж, Internet Gateway
+│  │  ├── routes.tf              # Налаштування маршрутизації
+│  │  ├── variables.tf           # Змінні для VPC
+│  │  └── outputs.tf  
+│  ├── ecr/                      # Модуль для ECR
+│  │  ├── ecr.tf                 # Створення ECR репозиторію
+│  │  ├── variables.tf           # Змінні для ECR
+│  │  └── outputs.tf             # Виведення URL репозиторію
+│  │
+│  ├── eks/                      # Модуль для Kubernetes кластера
+│  │  ├── eks.tf                 # Створення кластера
+│  │  ├── aws_ebs_csi_driver.tf  # Встановлення плагіну csi drive
+│  │  ├── variables.tf           # Змінні для EKS
+│  │  └── outputs.tf             # Виведення інформації про кластер
+│  │
+│  ├── rds/                      # Модуль для RDS
+│  │  ├── rds.tf                 # Створення RDS бази даних
+│  │  ├── aurora.tf              # Створення aurora кластера бази даних
+│  │  ├── shared.tf              # Спільні ресурси
+│  │  ├── variables.tf           # Змінні (ресурси, креденшели, values)
+│  │  └── outputs.tf  
+│  │ 
+│  ├── jenkins/                  # Модуль для Helm-установки Jenkins
+│  │  ├── jenkins.tf             # Helm release для Jenkins
+│  │  ├── variables.tf           # Змінні (ресурси, креденшели, values)
+│  │  ├── providers.tf           # Оголошення провайдерів
+│  │  ├── values.yaml            # Конфігурація jenkins
+│  │  └── outputs.tf             # Виводи (URL, пароль адміністратора)
+│  │ 
+│  └── argo_cd/                  # Модуль для Helm-установки Argo CD
+│    ├── jenkins.tf              # Helm release для Jenkins
+│    ├── variables.tf            # Змінні (версія чарта, namespace, repo URL тощо)
+│    ├── providers.tf            # Kubernetes+Helm
+│    ├── values.yaml             # Кастомна конфігурація Argo CD
+│    ├── outputs.tf              # Виводи (hostname, initial admin password)
+│		  └──charts/                 # Helm-чарт для створення app'ів
+│ 	 	  ├── Chart.yaml
+│	 	  ├── values.yaml            # Список applications, repositories
+│			  └── templates/
+│		    ├── application.yaml
+│		    └── repository.yaml
+├── charts/
+│  └── django-app/
+│    ├── templates/
+│    │  ├── deployment.yaml
+│    │  ├── service.yaml
+│    │  ├── configmap.yaml
+│    │  └── hpa.yaml
+│    ├── Chart.yaml
+│    └── values.yaml             # ConfigMap зі змінними середовища
+└──Django
+			 ├── app\
+			 ├── Dockerfile
+			 ├── Jenkinsfile
+			 └── docker-compose.yaml
+
+```
+
+### Розгортання інфраструктури Terraform
 
 ```bash
+# Ініціалізація
 terraform init
+
+# Планування
 terraform plan
+
+# Застосування
 terraform apply
 ```
 
-### Terraform RDS Модуль
+### Налаштування kubectl
 
-Універсальний модуль для створення баз даних у AWS:
+```bash
+# Отримати конфігурацію для підключення до EKS
+aws eks --region eu-central-1 update-kubeconfig \
+  --name $(terraform output -raw eks_cluster_name)
 
-- стандартний RDS (PostgreSQL/MySQL);
-- Aurora Cluster (PostgreSQL/MySQL) при `use_aurora = true`.
+# Перевірити підключення
+kubectl get nodes
+```
 
-**Змінні:**
+### Jenkins
 
-| Змінна                        | Тип          | Значення за замовчуванням | Опис                                                  |
-| ----------------------------- | ------------ | ------------------------- | ----------------------------------------------------- |
-| name                          | string       | —                         | Назва інстансу або кластера                           |
-| use_aurora                    | bool         | false                     | Використати Aurora (true) або стандартний RDS (false) |
-| db_name                       | string       | bd_rds                    | Назва бази даних                                      |
-| username                      | string       | —                         | Master username                                       |
-| password                      | string       | —                         | Master password (sensitive)                           |
-| engine                        | string       | postgres                  | Драйвер для RDS (postgres/mysql)                      |
-| engine_version                | string       | 14.19                     | Версія RDS (Postgres/MySQL)                           |
-| engine_cluster                | string       | aurora-postgresql         | Драйвер для Aurora                                    |
-| engine_version_cluster        | string       | 15.14                     | Версія Aurora                                         |
-| instance_class                | string       | db.t3.medium              | Клас інстансу                                         |
-| allocated_storage             | number       | 20                        | Обсяг сховища (тільки для RDS)                        |
-| multi_az                      | bool         | false                     | Чи розгортати у Multi-AZ                              |
-| publicly_accessible           | bool         | false                     | Доступність з інтернету                               |
-| backup_retention_period       | number       | 7                         | Днів збереження бекапів                               |
-| aurora_replica_count          | number       | 1                         | Кількість реплік Aurora                               |
-| vpc_id                        | string       | —                         | VPC ID                                                |
-| vpc_cidr_block                | string       | 10.0.0.0/16               | CIDR блок для VPC                                     |
-| subnet_private_ids            | list(string) | —                         | ID приватних підмереж                                 |
-| subnet_public_ids             | list(string) | —                         | ID публічних підмереж                                 |
-| parameter_group_family_rds    | string       | postgres15                | Параметри для RDS                                     |
-| parameter_group_family_aurora | string       | aurora-postgresql15       | Параметри для Aurora                                  |
-| parameters                    | map(string)  | {}                        | Кастомні параметри (наприклад max_connections)        |
-| tags                          | map(string)  | {}                        | Теги ресурсів                                         |
-| environment                   | string       | dev                       | Середовище (dev/stage/prod)                           |
-| project                       | string       | goit                      | Назва проєкту                                         |
+```bash
+# Отримати URL Jenkins
+kubectl get svc -n jenkins jenkins
 
-**Перемикання між Aurora та RDS:**
+# Отримати пароль адміністратора
+kubectl get secret -n jenkins jenkins -o jsonpath={.data.jenkins-admin-password} | base64 -d
+```
 
-- use_aurora = false → створюється звичайний RDS instance;
-- use_aurora = true → створюється Aurora cluster з writer + reader(s).
+### ArgoCD
+
+```bash
+# Отримати початковий пароль
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath={.data.password} | base64 -d
+
+# Port forward для доступу
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+### Prometheus
+
+```bash
+# Отримати URL
+kubectl get svc -n monitoring prometheus-server
+# Або через terraform output
+terraform output prometheus_url
+```
+
+### Grafana
+
+```bash
+# Отримати URL
+kubectl get svc -n monitoring grafana
+terraform output grafana_url
+
+# Отримати пароль адміністратора
+terraform output grafana_admin_password
+```
+
+### Моніторинг
+
+**Prometheus Metrics:**
+
+- Kubernetes кластер метрики
+- Node metрики (CPU, Memory, Network)
+- Pod метрики
+- Custom application метрики
+
+**Grafana Dashboards:**
+
+- Kubernetes Cluster Overview
+- Node Monitoring
+- Application Metrics
+- Database Monitoring
+
+### Безпека
+
+- **Network Security**: VPC з приватними підмережами
+- **Access Control**: IAM ролі з мінімальними правами
+- **Secrets Management**: Kubernetes secrets
+- **Database Security**: RDS в приватній мережі
+- **Container Security**: ECR image scanning
+- **Network Policies**: Kubernetes network policies

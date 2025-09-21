@@ -52,7 +52,7 @@ spec:
         sh '''
           git clone https://$GITHUB_USER:$GITHUB_PAT@github.com/$GITHUB_USER/devops-homework.git
           cd devops-homework
-          git checkout lesson-8-9
+          git checkout final_project
           cd django
           cp -r . /workspace/
         '''
@@ -80,14 +80,14 @@ stage('Update Chart Tag in Git') {
       )]) {
         sh '''
           cd devops-homework
-          git checkout lesson-8-9
+          git checkout final_project
           cd charts/django-app
           sed -i "s/tag: .*/tag: $IMAGE_TAG/" values.yaml
           git config user.email "$COMMIT_EMAIL"
           git config user.name "$COMMIT_NAME"
           git add values.yaml
           git commit -m "Update image tag to $IMAGE_TAG"
-          git push origin lesson-8-9
+          git push origin final_project
         '''
       }
     }

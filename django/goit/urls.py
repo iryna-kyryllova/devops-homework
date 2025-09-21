@@ -16,7 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django_prometheus import exports
+
+def home(request):
+    return HttpResponse("Hello Django!")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("metrics/", exports.ExportToDjangoView),  # <-- Prometheus metrics
+    path("", home),  # optional home page
 ]
