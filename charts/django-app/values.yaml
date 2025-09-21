@@ -1,0 +1,30 @@
+image:
+  repository: 110427924065.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+config:
+  DJANGO_SETTINGS_MODULE: 'project.settings'
+  DJANGO_DEBUG: 'false'
+  DJANGO_SECRET_KEY: 'my-super-random-secret-123456'
+  ALLOWED_HOSTS: '*'
+  DATABASE_URL: 'postgres://lesson7user:admin123@terraform-20250910122652593000000001.c7i2qgiu20ma.eu-central-1.rds.amazonaws.com:5432/lesson7db'

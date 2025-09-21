@@ -1,36 +1,43 @@
-# DevOps Homework 5
+# DevOps Homework 7
 
-Опис проєкту:
-
-Проєкт створює інфраструктуру на AWS за допомогою Terraform.  
-Використовується підхід «Infrastructure as Code» з розбиттям на модулі.
-
-Структура:
-
-- **s3-backend** створює S3-бакет для зберігання стейтів Terraform і DynamoDB-таблицю для блокування.
-- **vpc** створює VPC з публічними та приватними підмережами, Internet Gateway, NAT Gateway і таблицями маршрутів.
-- **ecr** створює репозиторій Elastic Container Registry (ECR) для зберігання Docker-образів.
-
-Ініціалізація проєкту:
+### Створення кластера EKS і необхідних ресурсів
 
 ```bash
 terraform init
-```
-
-Перевірка плану змін:
-
-```bash
 terraform plan
-```
-
-Застосування змін:
-
-```bash
 terraform apply
 ```
 
-Видалення ресурсів:
+### Підготовка Docker-образу
+
+Перейти в директорію з проєктом (тема 4), де лежить Dockerfile, та виконати:
 
 ```bash
-terraform destroy
+docker build -t django-app:latest .
+docker tag django-app:latest 110427924065.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr:latest
+docker push 110427924065.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr:latest
 ```
+
+### Деплой Django у кластері
+
+Перейти в директорію з чартом та виконати:
+
+```bash
+helm upgrade --install django . -n django --create-namespace -f values.yaml
+```
+
+### Перевірка
+
+Подивитися статус подів:
+
+```bash
+kubectl get pods -n django
+```
+
+Подивитися LoadBalancer:
+
+```bash
+kubectl get svc -n django
+```
+
+Отриманий EXTERNAL-IP можна відкрити у браузері.
