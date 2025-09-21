@@ -5,8 +5,14 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "django-app.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-{{- range $k, $v := .Values.config }}
-{{ $k }}: {{ $v | quote }}
-{{- end }}
+  SECRET_KEY: "my-super-random-secret-123456"
+  DEBUG: "False"
+  ALLOWED_HOSTS: "localhost,.us-central-1.elb.amazonaws.com"
+  POSTGRES_DB: {{ .Values.config.POSTGRES_DB | quote }}
+  POSTGRES_USER: {{ .Values.config.POSTGRES_USER | quote }}
+  POSTGRES_PASSWORD: {{ .Values.config.POSTGRES_PASSWORD | quote }}
+  POSTGRES_HOST: {{ .Values.config.POSTGRES_HOST | quote }}
+  POSTGRES_PORT: {{ .Values.config.POSTGRES_PORT | quote }}
+

@@ -1,23 +1,41 @@
-variable "aws_region" {
+variable "region" {
   description = "AWS region for deployment"
   type        = string
   default     = "us-central-1"
 }
 
-variable "db_name" {
-  description = "Name of the DB"
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
   type        = string
-  default     = "lesson7db"
+  default     = "eks-cluster"
 }
 
-variable "db_user" {
-  description = "Name of the DB user"
-  type        = string
-  default     = "lesson7user"
+variable "vpc_name" {
+  default = "lesson-5-vpc"
 }
 
-variable "db_password" {
-  description = "DB password"
+variable "instance_type" {
+  description = "EC2 instance type for the worker nodes"
   type        = string
-  default     = "admin123"
+  default     = "t3.medium"
+}
+
+variable "repository_name" {
+  description = "Name of the ECR repository"
+  type        = string
+  default     = "lesson-5-ecr"
+}
+
+variable "github_pat" {
+  description = "GitHub Personal Access Token"
+  type        = string
+}
+
+variable "github_user" {
+  description = "GitHub username"
+  type        = string
+}
+variable "github_repo_url" {
+  description = "GitHub repository name"
+  type        = string
 }

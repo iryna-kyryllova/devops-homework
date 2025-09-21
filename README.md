@@ -1,6 +1,8 @@
-# DevOps Homework 7
+# DevOps Homework 8-9
 
-### Створення кластера EKS і необхідних ресурсів
+### Розгортання інфраструктури
+
+У корені проєкту виконуємо команди Terraform для створення всіх необхідних сервісів:
 
 ```bash
 terraform init
@@ -8,36 +10,21 @@ terraform plan
 terraform apply
 ```
 
-### Підготовка Docker-образу
+### Перевірити Jenkins job
 
-Перейти в директорію з проєктом (тема 4), де лежить Dockerfile, та виконати:
-
-```bash
-docker build -t django-app:latest .
-docker tag django-app:latest 110427924065.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr:latest
-docker push 110427924065.dkr.ecr.eu-central-1.amazonaws.com/lesson-5-ecr:latest
-```
-
-### Деплой Django у кластері
-
-Перейти в директорію з чартом та виконати:
+Увійти в Jenkins та виконати pipeline з Jenkinsfile або з CLI виконати:
 
 ```bash
-helm upgrade --install django . -n django --create-namespace -f values.yaml
+jenkins-cli build my-pipeline -s
 ```
 
-### Перевірка
+В результаті збирається Docker-образ, пушиться в ECR і оновлюється тег у Helm chart.
 
-Подивитися статус подів:
+### Побачити результат в Argo CD
 
-```bash
-kubectl get pods -n django
-```
-
-Подивитися LoadBalancer:
+Увійти в Argo CD та переконатися, що застосунок у стані Synced/Healthy.
+Також можна перевірити командою:
 
 ```bash
 kubectl get svc -n django
 ```
-
-Отриманий EXTERNAL-IP можна відкрити у браузері.

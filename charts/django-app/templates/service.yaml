@@ -1,16 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: { { include "django-app.fullname" . } }
-  labels:
-    app.kubernetes.io/name: { { include "django-app.name" . } }
-    app.kubernetes.io/instance: { { .Release.Name } }
+  name: {{ .Release.Name }}-django
 spec:
-  type: LoadBalancer
+  type: {{ .Values.service.type }}
   selector:
-    app.kubernetes.io/name: { { include "django-app.name" . } }
-    app.kubernetes.io/instance: { { .Release.Name } }
+    app: {{ .Release.Name }}-django
   ports:
     - port: 80
-      targetPort: 8000
-      protocol: TCP
+      targetPort: {{ .Values.service.port }}
